@@ -1,4 +1,5 @@
 import random
+import time
 
 #!---------------- nhập số quân hậu và chiều của bàn cờ-----------------------------------------
 N = int(input("Điền số quân hậu mà bạn muốn trong bàn cờ: "))
@@ -162,39 +163,39 @@ def GetNeighbour(Board, State):
 #!------------------------------------------- intitialize algor--------------------------------------
 def HillClimbingAlgor(Board, State):
 
-	neighbourBoard = [[0 for _ in range(N)] for _ in range(N)] #! matrix toàn 0 n*n
-	neighbourState = [0 for _ in range(N)] #! aray toàn 0 với size n
+	NeighbourBoard = [[0 for _ in range(N)] for _ in range(N)] #! matrix toàn 0 n*n
+	NeighbourState = [0 for _ in range(N)] #! aray toàn 0 với size n
 
-	CopyState(neighbourState, State); #! copy state từ state vào neighbourstate \
+	CopyState(NeighbourState, State); #! copy state từ state vào NeighbourState 
      
     #! generateboard là đầu tiên fill với ma trận toàn 0 vào
     #! neighbour board. sau đó thì gán các con hậu vào các r
-    #! với giá trị neighbourState tương ứng
-	GenerateBoard(neighbourBoard, neighbourState);
+    #! với giá trị NeighbourState tương ứng
+	GenerateBoard(NeighbourBoard, NeighbourState);
 	
 	while True:
 
 
-		CopyState(State, neighbourState);
+		CopyState(State, NeighbourState);
 		GenerateBoard(Board, State);
 
 		
 
-		GetNeighbour(neighbourBoard, neighbourState); #! mục đích của getNeighbour là để mình tìm global minimum
+		GetNeighbour(NeighbourBoard, NeighbourState); #! mục đích của getNeighbour là để mình tìm global minimum
 
-		if (CompareStates(State, neighbourState)):
+		if (CompareStates(State, NeighbourState)):
 
 			#! khi mà không có một khả năng cực tiểu nào khác chung quanh nó thì in ra
 			PrintBoard(Board);
 			break;
 		
-		elif (Judgement_func(Board, State) == Judgement_func(neighbourBoard,neighbourState)):
+		elif (Judgement_func(Board, State) == Judgement_func(NeighbourBoard,NeighbourState)):
 
 			#! dòng code if trên nghĩa là: khi mà số cặp hậu của board bình thường và hàng xóm của nó là bằng nhau, 
 			#! tuy nhiên thì 2 board này lại không bằng nhau 
 			#! ----> chứng tỏ là đang bị cực tiểu local. 
-			neighbourState[random.randint(0, N-1)] = random.randint(0, N-1) ;
-			GenerateBoard(neighbourBoard, neighbourState);
+			NeighbourState[random.randint(0, N-1)] = random.randint(0, N-1) ;
+			GenerateBoard(NeighbourBoard, NeighbourState);
 		
 #!------------------------------------- main-----------------------------------------------------
 State = [0] * N # array từ toàn 0 dài N
@@ -202,11 +203,18 @@ Board = [[0 for _ in range(N)] for _ in range(N)] # matrix toàn 0 n*n
 
 
 #! khởi tạo board một cách random. 
+start_time = time.time_ns()
 initial_random(Board, State);
 
 
 HillClimbingAlgor(Board, State);
+end_time = time.time_ns()
+print("Tổng thời gian thực thi chương trình là: " + str((end_time-start_time)/1000000000) + " (s) ")
 
+
+                    
+
+  
 
                     
 
