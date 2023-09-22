@@ -1,0 +1,213 @@
+import random
+
+#!---------------- nhập số quân hậu và chiều của bàn cờ-----------------------------------------
+N = int(input("Điền số quân hậu mà bạn muốn trong bàn cờ: "))
+if(N == 2 or N == 3):
+	print("Không tồn tại khả năng N = 2 hoặc N = 3")
+ 
+ 
+ #!---------------------------------------------------------------------------------------------
+
+
+def initial_random(Board, State):
+	for i in range(N):
+
+		State[i] = random.randint(0,N-1); #! khởi tạo random ở bất kỳ hàng nào
+
+		Board[State[i]][i] = 1;
+
+#!-----------------------------------------check xem có bị collision không-----------------------------------------------------------------
+def Judgement_func(Board, State):
+
+	count = 0;
+
+	
+	for i in range(0,N):
+     
+		r = State[i] #! giá trị của row bằng với giá trị tại State[i] lần lượt
+		c = i - 1;
+		while (c >= 0 and Board[r][c] != 1) :
+			c -= 1
+		
+		if (c >= 0 and Board[r][c] == 1) :
+			count += 1; 
+		
+		
+		r = State[i]
+		c = i + 1;
+		while (c < N and Board[r][c] != 1):
+			c += 1; #! Nếu chưa chưa bị vướng (khi có con hậu đặt vào thì nó đặt là 1. Chưa thì 0)
+                    #! nếu chưa đặt thì di chuyển sang cột khác
+		
+		if (c < N and Board[r][c] == 1) :
+			count += 1;
+		
+  #! kiểm tra phần trái bên dưới
+		r = State[i] + 1
+		c = i - 1;
+		while (c >= 0 and r < N and Board[r][c] != 1) :
+			c -= 1;
+			r += 1;
+		
+		if (c >= 0 and r < N and Board[r][c] == 1) :
+			count += 1;
+   
+		
+  #! Kiểm tra phần trái bên trên.
+		r = State[i] - 1
+		c = i - 1;
+		while (c >= 0 and r >= 0 and Board[r][c] != 1) :
+			c-= 1;
+			r-= 1; #! di chuyển theo hàng chéo
+		
+		if (c >= 0 and r >= 0 and Board[r][c] == 1) :
+			count+= 1;
+		
+		
+  #! Kiểm tra phần phải bên dưới
+		r = State[i] + 1
+		c = i + 1;
+		while (c < N and r < N and Board[r][c] != 1) :
+			c+= 1;
+			r+= 1;
+		
+		if (c < N and r < N and Board[r][c] == 1) :
+			count += 1;
+		
+  #! kiểm tra phần phải bên trên
+		r = State[i] - 1
+		c = i + 1;
+		while (c < N and r >= 0 and Board[r][c] != 1) :
+			c += 1;
+			r -= 1;
+		
+		if (c < N and r >= 0 and Board[r][c] == 1) :
+			count += 1;
+		
+	
+	return int(count / 2); #! trả lại pair này tức là đang hill climb. 
+	#! đây là trả về số cặp con hậu đang tấn công nhau. (chính là hàm h() mà mình đang muốn tìm).
+    #! muốn kiểm thử xem đúng không thì ta có thể sử dụng debug của python để kiểm tra thử. Đặt mốc ở optimizer_pair 
+    #! ở hàm hill climbing
+#!----------------------------------------------------------------------------------------------------------
+
+
+def PrintBoard(Board):
+	for i in range(N):
+		print(*Board[i])
+  
+def CopyState(State1, State2):
+	for i in range(N):
+		State1[i] = State2[i];
+  
+def Fill(Board, Value):	
+	for i in range(N):
+		for j in range(N):
+			Board[i][j] = Value;
+
+def GenerateBoard(Board, State):
+	Fill(Board, 0); #! fill ma trận với toàn 0
+	for i in range(N):
+		Board[State[i]][i] = 1; # board[state[0]][0]; board[state[1]][1]; board[state[2]][2]
+
+def CompareStates(State1, State2):
+	for i in range(N):
+		if (State1[i] != State2[i]):
+			return False;
+	return True;
+#!---------------------- get optimize neighbour------------------------
+def GetNeighbour(Board, State):
+    optimize_board = [[0 for _ in range(N)] for _ in range(N)]
+    optimize_state = [0 for _ in range(N)]
+    
+    CopyState(optimize_state,State)
+    GenerateBoard(optimize_board,optimize_state)
+    
+    optimize_Object = Judgement_func(optimize_board, optimize_state)
+    
+    temp_board = [[0 for _ in range(N)] for _ in range(N)]
+    temp_state = [0 for _ in range(N)]
+    CopyState(temp_state,State)
+    GenerateBoard(temp_board,temp_state)
+    
+    for i in range(N):
+        for j in range(N):
+            #! rõ ràng là ta đang muốn xét thằng hàng xóm
+            #! vậy thì j == State[i] có nghĩa là hàng xóm = current
+            #! -> vậy là xét thừa 1 trường hợp! vì vậy nên
+            #! để j != State[i]
+            if (j != State[i]):
+                temp_state[i] = j;
+                temp_board[temp_state[i]][i] = 1;
+                temp_board[State[i]][i] = 0;
+                
+                temp_pair = Judgement_func(temp_board, temp_state)
+                
+                #! nếu mà current nhỏ hơn thì dùng current làm optimize luôn.
+                if(temp_pair <= optimize_Object):
+                    optimize_Object = temp_pair;
+                    CopyState(optimize_state, temp_state)
+                    GenerateBoard(optimize_board, optimize_state)
+                
+                #! quay trở lại để tiếp tục lần lặp tiếp theo. 
+                temp_board[temp_state[i]][i] = 0
+                temp_state[i] = State[i]
+                temp_board[State[i]][i]= 1
+    
+    #! sau khi lặp xong thì trả lại giá trị đã tối ưu hóa vào board gốc
+    CopyState(State, optimize_state);
+    Fill(Board,0)
+    GenerateBoard(Board,State)
+
+#!------------------------------------------- intitialize algor--------------------------------------
+def HillClimbingAlgor(Board, State):
+
+	neighbourBoard = [[0 for _ in range(N)] for _ in range(N)] #! matrix toàn 0 n*n
+	neighbourState = [0 for _ in range(N)] #! aray toàn 0 với size n
+
+	CopyState(neighbourState, State); #! copy state từ state vào neighbourstate \
+     
+    #! generateboard là đầu tiên fill với ma trận toàn 0 vào
+    #! neighbour board. sau đó thì gán các con hậu vào các r
+    #! với giá trị neighbourState tương ứng
+	GenerateBoard(neighbourBoard, neighbourState);
+	
+	while True:
+
+
+		CopyState(State, neighbourState);
+		GenerateBoard(Board, State);
+
+		
+
+		GetNeighbour(neighbourBoard, neighbourState); #! mục đích của getNeighbour là để mình tìm global minimum
+
+		if (CompareStates(State, neighbourState)):
+
+			#! khi mà không có một khả năng cực tiểu nào khác chung quanh nó thì in ra
+			PrintBoard(Board);
+			break;
+		
+		elif (Judgement_func(Board, State) == Judgement_func(neighbourBoard,neighbourState)):
+
+			#! dòng code if trên nghĩa là: khi mà số cặp hậu của board bình thường và hàng xóm của nó là bằng nhau, 
+			#! tuy nhiên thì 2 board này lại không bằng nhau 
+			#! ----> chứng tỏ là đang bị cực tiểu local. 
+			neighbourState[random.randint(0, N-1)] = random.randint(0, N-1) ;
+			GenerateBoard(neighbourBoard, neighbourState);
+		
+#!------------------------------------- main-----------------------------------------------------
+State = [0] * N # array từ toàn 0 dài N
+Board = [[0 for _ in range(N)] for _ in range(N)] # matrix toàn 0 n*n
+
+
+#! khởi tạo board một cách random. 
+initial_random(Board, State);
+
+
+HillClimbingAlgor(Board, State);
+
+
+                    
+
+  
